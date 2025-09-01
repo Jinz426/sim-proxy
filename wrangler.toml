@@ -1,0 +1,3 @@
+name = "sim-proxy" # todo
+main = "./src/index.ts"
+compatibility_date = "2025-01-23"
