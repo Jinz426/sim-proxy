@@ -1,7 +1,5 @@
-interface Env {
-	CORS_ALLOW_ORIGIN: string;
-	SIM_API_KEY: string;
-}
+import { handleWalletRoutes, Env } from './routes';
+import { WalletManager } from './wallet';
 
 export default {
 	async fetch(request: Request, env: Env) {
@@ -33,6 +31,34 @@ export default {
 		}
 
 		const url = new URL(request.url);
+
+		// Handle wallet routes
+		const walletResponse = await handleWalletRoutes(request, env, headers as Record<string, string>);
+		if (walletResponse) {
+			return walletResponse;
+		}
+
+		// Collect data for wallet if wallet ID is provided in headers
+		const walletId = request.headers.get('X-Wallet-Id');
+		if (walletId && env.WALLET_KV) {
+			try {
+				const walletManager = new WalletManager(env.WALLET_KV);
+				await walletManager.collectData(
+					walletId,
+					'api_request',
+					{
+						method: request.method,
+						path: url.pathname,
+						query: url.search,
+						timestamp: new Date().toISOString(),
+					},
+					'sim-proxy'
+				);
+			} catch (error) {
+				// Don't fail the request if data collection fails
+				console.error('Failed to collect data:', error);
+			}
+		}
 
 		// Clone the request to modify headers
 		const req = new Request(`https://api.sim.dune.com${url.pathname}${url.search}`, {
