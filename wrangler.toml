@@ -1,3 +1,8 @@
 name = "sim-proxy" # todo
 main = "./src/index.ts"
 compatibility_date = "2025-01-23"
+
+# Uncomment and configure KV namespace for digital wallet feature
+# [[kv_namespaces]]
+# binding = "WALLET_KV"
+# id = "your-kv-namespace-id"

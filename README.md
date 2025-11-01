@@ -8,6 +8,16 @@ Sim APIs offers 100k monthly API calls and 5 requests per second for free.
 Cloudflare workers can execute 100k invocations each day for free.
 Most projects can easily get started within these free tiers.
 
+## Digital Wallet Feature
+
+This proxy now includes a **digital wallet feature** that allows you to:
+- Create and manage virtual wallets with balance tracking
+- Record transactions (credits and debits) with detailed metadata
+- Automatically collect data from API interactions across online spaces
+- Store wallet data persistently using Cloudflare KV
+
+See [WALLET.md](./WALLET.md) for complete documentation on using the digital wallet feature.
+
 ## Setup
 
 ### Step 1
