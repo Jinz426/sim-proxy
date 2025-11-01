@@ -61,12 +61,13 @@ export default {
 		}
 
 		// Clone the request to modify headers
+		const modifiedHeaders = new Headers(request.headers);
+		modifiedHeaders.set('X-Sim-Api-Key', env.SIM_API_KEY);
+
 		const req = new Request(`https://api.sim.dune.com${url.pathname}${url.search}`, {
-			...request,
-			headers: new Headers({
-				...Object.fromEntries(request.headers.entries()),
-				'X-Sim-Api-Key': env.SIM_API_KEY,
-			}),
+			method: request.method,
+			headers: modifiedHeaders,
+			body: request.body,
 		});
 
 		return fetch(req);
