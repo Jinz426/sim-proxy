@@ -84,17 +84,35 @@ export async function handleWalletRoutes(
 			);
 		}
 
+		const amount = parseFloat(body.amount);
+		if (isNaN(amount) || amount <= 0) {
+			return jsonResponse(
+				{ success: false, error: 'Invalid amount: must be a positive number' },
+				400,
+				corsHeaders
+			);
+		}
+
+		if (body.type !== 'credit' && body.type !== 'debit') {
+			return jsonResponse(
+				{ success: false, error: 'Invalid type: must be "credit" or "debit"' },
+				400,
+				corsHeaders
+			);
+		}
+
 		try {
 			const transaction = await walletManager.recordTransaction(
 				walletId,
-				parseFloat(body.amount),
+				amount,
 				body.type,
 				body.description,
 				body.metadata || {}
 			);
 			return jsonResponse({ success: true, transaction }, 201, corsHeaders);
 		} catch (error) {
-			return jsonResponse({ success: false, error: 'Failed to record transaction' }, 500, corsHeaders);
+			const errorMessage = error instanceof Error ? error.message : 'Failed to record transaction';
+			return jsonResponse({ success: false, error: errorMessage }, 500, corsHeaders);
 		}
 	}
 

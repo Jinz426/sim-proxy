@@ -37,7 +37,7 @@ export class WalletManager {
 
 	// Generate unique ID
 	private generateId(): string {
-		return `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+		return `${Date.now()}-${Math.random().toString(36).substring(2, 11)}`;
 	}
 
 	// Create a new wallet
@@ -70,7 +70,12 @@ export class WalletManager {
 			return null;
 		}
 
-		return JSON.parse(walletData) as WalletData;
+		try {
+			return JSON.parse(walletData) as WalletData;
+		} catch (error) {
+			console.error('Failed to parse wallet data:', error);
+			return null;
+		}
 	}
 
 	// Update wallet balance
@@ -83,6 +88,10 @@ export class WalletManager {
 		if (operation === 'add') {
 			wallet.balance += amount;
 		} else {
+			// Check for sufficient funds before debit
+			if (wallet.balance < amount) {
+				throw new Error('Insufficient funds');
+			}
 			wallet.balance -= amount;
 		}
 
@@ -123,7 +132,15 @@ export class WalletManager {
 			// Also add to wallet's transaction list
 			const txListKey = `wallet:${walletId}:transactions`;
 			const existingTxList = await this.kv.get(txListKey);
-			const txList = existingTxList ? JSON.parse(existingTxList) : [];
+			let txList: string[] = [];
+			if (existingTxList) {
+				try {
+					txList = JSON.parse(existingTxList);
+				} catch (error) {
+					console.error('Failed to parse transaction list:', error);
+					txList = [];
+				}
+			}
 			txList.push(transaction.id);
 			await this.kv.put(txListKey, JSON.stringify(txList));
 		}
@@ -144,7 +161,14 @@ export class WalletManager {
 			return [];
 		}
 
-		const txIds: string[] = JSON.parse(txListData);
+		let txIds: string[];
+		try {
+			txIds = JSON.parse(txListData);
+		} catch (error) {
+			console.error('Failed to parse transaction list:', error);
+			return [];
+		}
+
 		const transactions: Transaction[] = [];
 
 		// Get the most recent transactions
@@ -153,7 +177,11 @@ export class WalletManager {
 		for (const txId of recentTxIds) {
 			const txData = await this.kv.get(`transaction:${txId}`);
 			if (txData) {
-				transactions.push(JSON.parse(txData) as Transaction);
+				try {
+					transactions.push(JSON.parse(txData) as Transaction);
+				} catch (error) {
+					console.error('Failed to parse transaction:', error);
+				}
 			}
 		}
 
@@ -182,7 +210,15 @@ export class WalletManager {
 			// Add to wallet's data collection list
 			const dataListKey = `wallet:${walletId}:data`;
 			const existingDataList = await this.kv.get(dataListKey);
-			const dataList = existingDataList ? JSON.parse(existingDataList) : [];
+			let dataList: string[] = [];
+			if (existingDataList) {
+				try {
+					dataList = JSON.parse(existingDataList);
+				} catch (error) {
+					console.error('Failed to parse data collection list:', error);
+					dataList = [];
+				}
+			}
 			dataList.push(entry.id);
 			await this.kv.put(dataListKey, JSON.stringify(dataList));
 		}
@@ -203,7 +239,14 @@ export class WalletManager {
 			return [];
 		}
 
-		const dataIds: string[] = JSON.parse(dataListData);
+		let dataIds: string[];
+		try {
+			dataIds = JSON.parse(dataListData);
+		} catch (error) {
+			console.error('Failed to parse data collection list:', error);
+			return [];
+		}
+
 		const dataEntries: DataCollectionEntry[] = [];
 
 		// Get the most recent data entries
@@ -212,7 +255,11 @@ export class WalletManager {
 		for (const dataId of recentDataIds) {
 			const entryData = await this.kv.get(`data:${dataId}`);
 			if (entryData) {
-				dataEntries.push(JSON.parse(entryData) as DataCollectionEntry);
+				try {
+					dataEntries.push(JSON.parse(entryData) as DataCollectionEntry);
+				} catch (error) {
+					console.error('Failed to parse data entry:', error);
+				}
 			}
 		}
 
@@ -233,7 +280,11 @@ export class WalletManager {
 			if (!key.name.includes(':transactions') && !key.name.includes(':data')) {
 				const walletData = await this.kv.get(key.name);
 				if (walletData) {
-					wallets.push(JSON.parse(walletData) as WalletData);
+					try {
+						wallets.push(JSON.parse(walletData) as WalletData);
+					} catch (error) {
+						console.error('Failed to parse wallet data:', error);
+					}
 				}
 			}
 		}
